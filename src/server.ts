@@ -10,7 +10,7 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import userRoute from '@/routes/userRoute';
 import authRouter from '@/routes/authRouter';
-
+import globalErrorHandler from './lib/globalErrorHandler';
 const app = express();
 
 mongoose
@@ -79,6 +79,8 @@ app.use(limiter);
 })();
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/auth', authRouter);
+
+app.use(globalErrorHandler);
 
 const handleServerShutdown = async () => {
   try {

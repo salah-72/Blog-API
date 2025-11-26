@@ -46,7 +46,8 @@
     "paths": {
       // make @ alias: refers to src, -r tsconfig-paths/register in nodemon.json is must
       "@/*": ["src/*"]
-    }
+    },
+    "typeRoots": ["./src/@types"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
