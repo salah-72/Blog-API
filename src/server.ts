@@ -1,16 +1,26 @@
 import express from 'express';
 import cors from 'cors';
-
+import mongoose from 'mongoose';
 import config from '@/Config';
-
+import { logger } from '@/lib/winston';
 import type { CorsOptions } from 'cors';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
-import { error } from 'console';
+import userRoute from '@/routes/userRoute';
+import authRouter from '@/routes/authRouter';
 
 const app = express();
+
+mongoose
+  .connect(config.DB_PASSWORD as string)
+  .then(() => {
+    logger.info('good connection to DB');
+  })
+  .catch((err) => {
+    logger.error('failed to connect DB', err);
+  });
 
 const corsOptions: CorsOptions = {
   origin(origin, callback) {
@@ -25,7 +35,7 @@ const corsOptions: CorsOptions = {
         new Error(`CORS error: ${origin} is not allowed by CORS`),
         false,
       );
-      console.log(`CORS error: ${origin} is not allowed by CORS`);
+      logger.warn(`CORS error: ${origin} is not allowed by CORS`);
     }
   },
 };
@@ -58,22 +68,24 @@ app.use(limiter);
     });
 
     app.listen(config.PORT, () => {
-      console.log(`we are listenning at port ${config.PORT}`);
+      logger.info(`we are listenning at port ${config.PORT}`);
     });
   } catch (err) {
-    console.log('failed ro start the server', err);
+    logger.error('failed ro start the server', err);
     if (config.NODE_ENV === 'production') {
       process.exit(1);
     }
   }
 })();
+app.use('/api/v1/users', userRoute);
+app.use('/api/v1/auth', authRouter);
 
 const handleServerShutdown = async () => {
   try {
-    console.log('Server SHUTDOWN');
+    logger.warn('Server SHUTDOWN');
     process.exit(0);
   } catch (err) {
-    console.log('Error during server shutdown', err);
+    logger.error('Error during server shutdown', err);
   }
 };
 
