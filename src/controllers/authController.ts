@@ -109,7 +109,7 @@ export const protect = catchAsync(
     ) {
       token = token || req.headers.authorization.split(' ')[1];
     }
-    if (!token) return next(new appError('no access to GO', 401));
+    if (!token) return next(new appError('User not authenticated', 401));
 
     const decode_jwt = (await jwt.verify(
       token,
@@ -122,3 +122,14 @@ export const protect = catchAsync(
     next();
   },
 );
+
+export const restrictTo = (...roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) return next(new appError('User not authenticated', 401));
+    if (!roles.includes(req.user.role))
+      return next(
+        new appError('you have no permission to do this action', 403),
+      );
+    next();
+  };
+};

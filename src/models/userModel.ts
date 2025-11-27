@@ -6,8 +6,8 @@ export interface IUser {
   username: string;
   email: string;
   password: string;
-  passwordConfirm: string;
   role: 'user' | 'admin';
+  _id: mongoose.Types.ObjectId;
   firstName?: string;
   lastName?: string;
   socialLinks: {
