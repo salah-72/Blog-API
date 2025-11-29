@@ -11,6 +11,9 @@ const config = {
   JWT_KEY: process.env.JWT_KEY as ms.StringValue,
   EXPIRED_IN: process.env.EXPIRED_IN as ms.StringValue,
   ADMINS_EMAIL: ['meda5103@gmail.com', 'a7med11salah@gmail.com'],
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET_KEY: process.env.CLOUDINARY_API_SECRET_KEY,
+  CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,
 };
 
 export default config;

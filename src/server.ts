@@ -10,6 +10,7 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import userRoute from '@/routes/userRoute';
 import authRouter from '@/routes/authRouter';
+import blogRouter from '@/routes/blogRouter';
 import globalErrorHandler from './lib/globalErrorHandler';
 const app = express();
 
@@ -79,6 +80,7 @@ app.use(limiter);
 })();
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/blogs', blogRouter);
 
 app.use(globalErrorHandler);
 
