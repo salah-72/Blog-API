@@ -1,8 +1,10 @@
 import { logger } from '@/lib/winston';
 import User, { IUser } from '@/models/userModel';
+import Blog from '@/models/blogModel';
 import appError from '@/utils/appError';
 import catchAsync from '@/utils/catchAsync';
 import type { Request, Response, NextFunction } from 'express';
+import { v2 as cloudinary } from 'cloudinary';
 
 export const GetCurrentUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -59,6 +61,12 @@ export const UpdateCurrentUser = catchAsync(
 export const deleteCurrentUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (!req.user) return next(new appError('User not authenticated', 401));
+    const blogs = Blog.find({ author: req.user._id })
+      .select('banner.publicId')
+      .lean()
+      .exec();
+    const publicIds = (await blogs).map(({ banner }) => banner.publicId);
+    await cloudinary.api.delete_resources(publicIds);
 
     await User.findByIdAndDelete(req.user._id);
     res.status(204).json({
@@ -102,8 +110,10 @@ export const getUser = catchAsync(
 
 export const deletetUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!req.user) return next(new appError('User not authenticated', 401));
-
+    const deluser = await User.findById(req.params.id);
+    if (!req.user || !deluser) return next(new appError('User not found', 404));
+    if (deluser.role === 'admin')
+      return next(new appError('cannot delete admin', 401));
     await User.findByIdAndDelete(req.params.id);
     res.status(204).json({
       status: 'success',
