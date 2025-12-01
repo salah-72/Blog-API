@@ -11,6 +11,8 @@ import { rateLimit } from 'express-rate-limit';
 import userRoute from '@/routes/userRoute';
 import authRouter from '@/routes/authRouter';
 import blogRouter from '@/routes/blogRouter';
+import likeRouter from '@/routes/likeRouter';
+import commentRouter from '@/routes/commentRouter';
 import globalErrorHandler from './lib/globalErrorHandler';
 const app = express();
 
@@ -81,6 +83,8 @@ app.use(limiter);
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/blogs', blogRouter);
+app.use('/api/v1/likes', likeRouter);
+app.use('/api/v1/comments', commentRouter);
 
 app.use(globalErrorHandler);
 
