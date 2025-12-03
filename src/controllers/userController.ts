@@ -8,9 +8,9 @@ import { v2 as cloudinary } from 'cloudinary';
 
 export const GetCurrentUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!req.user) return next(new appError('User not authenticated', 401));
+    if (!req.User) return next(new appError('User not authenticated', 401));
 
-    const user = await User.findById(req.user._id).lean().exec();
+    const user = await User.findById(req.User._id).lean().exec();
     res.status(200).json({
       status: 'success',
       data: user,
@@ -20,7 +20,7 @@ export const GetCurrentUser = catchAsync(
 
 export const UpdateCurrentUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!req.user) return next(new appError('User not authenticated', 401));
+    if (!req.User) return next(new appError('User not authenticated', 401));
     const {
       username,
       email,
@@ -34,7 +34,7 @@ export const UpdateCurrentUser = catchAsync(
       x,
       youtube,
     } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.User._id);
     if (!user) return next(new appError('user not found', 404));
     if (email) user.email = email;
     if (username) user.username = username;
@@ -60,15 +60,15 @@ export const UpdateCurrentUser = catchAsync(
 
 export const deleteCurrentUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!req.user) return next(new appError('User not authenticated', 401));
-    const blogs = Blog.find({ author: req.user._id })
+    if (!req.User) return next(new appError('User not authenticated', 401));
+    const blogs = Blog.find({ author: req.User._id })
       .select('banner.publicId')
       .lean()
       .exec();
     const publicIds = (await blogs).map(({ banner }) => banner.publicId);
     await cloudinary.api.delete_resources(publicIds);
 
-    await User.findByIdAndDelete(req.user._id);
+    await User.findByIdAndDelete(req.User._id);
     res.status(204).json({
       status: 'success',
     });
@@ -77,7 +77,7 @@ export const deleteCurrentUser = catchAsync(
 
 export const getAllUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!req.user) return next(new appError('User not authenticated', 401));
+    if (!req.User) return next(new appError('User not authenticated', 401));
 
     const all = await User.countDocuments();
     const limit = parseInt(req.query.limit as string);
@@ -98,7 +98,7 @@ export const getAllUsers = catchAsync(
 
 export const getUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!req.user) return next(new appError('User not authenticated', 401));
+    if (!req.User) return next(new appError('User not authenticated', 401));
 
     const user = await User.findById(req.params.id);
     res.status(200).json({
@@ -111,7 +111,7 @@ export const getUser = catchAsync(
 export const deletetUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const deluser = await User.findById(req.params.id);
-    if (!req.user || !deluser) return next(new appError('User not found', 404));
+    if (!req.User || !deluser) return next(new appError('User not found', 404));
     if (deluser.role === 'admin')
       return next(new appError('cannot delete admin', 401));
     await User.findByIdAndDelete(req.params.id);

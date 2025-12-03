@@ -9,6 +9,8 @@ import appError from '@/utils/appError';
 import { Types } from 'mongoose';
 import { logger } from '@/lib/winston';
 import bcrypt from 'bcryptjs';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 
 const gen_token = (_id: Types.ObjectId): string => {
   return jwt.sign({ _id }, config.JWT_KEY, { expiresIn: config.EXPIRED_IN });
@@ -92,7 +94,7 @@ export const logout = catchAsync(
     res.status(204).json({
       status: 'success',
     });
-    logger.info('user logged out', req.user?.username);
+    logger.info('user logged out', req.User?.username);
   },
 );
 
@@ -118,18 +120,74 @@ export const protect = catchAsync(
     const user = await User.findById(decode_jwt._id);
     if (!user) return next(new appError('User no longer exists', 404));
 
-    req.user = user;
+    req.User = user;
     next();
   },
 );
 
 export const restrictTo = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) return next(new appError('User not authenticated', 401));
-    if (!roles.includes(req.user.role))
+    if (!req.User) return next(new appError('User not authenticated', 401));
+    if (!roles.includes(req.User.role))
       return next(
         new appError('you have no permission to do this action', 403),
       );
     next();
   };
+};
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientSecret: config.CLIENT_SECRET!,
+      clientID: config.CLIENT_ID!,
+      callbackURL: 'http://localhost:3000/api/v1/auth/google/callback',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await User.findOne({ email: profile._json.email });
+        if (!user) {
+          const username = genUsername();
+          const password = Math.random().toString(36).slice(2);
+          user = await User.create({
+            email: profile._json.email,
+            firstName: profile._json.given_name,
+            lastName: profile._json.family_name,
+            username,
+            password,
+          });
+        }
+        done(null, user);
+      } catch (err) {
+        console.log(err);
+        done(err);
+      }
+    },
+  ),
+);
+
+export const googleAuthCallback = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  passport.authenticate('google', { session: false }, (err, user) => {
+    if (err || !user)
+      return res.status(401).json({ message: 'Auth failed', err });
+
+    const token: string = gen_token(user._id);
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+    // res.status(200).json({
+    //   status: 'success',
+    //   data: {
+    //     user,
+    //     token,
+    //   },
+    // });
+    res.redirect('/api/v1/');
+  })(req, res, next);
 };

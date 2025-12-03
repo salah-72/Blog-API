@@ -12,12 +12,12 @@ export const likeBlog = catchAsync(
 
     const isLiked = await Like.findOne({
       blog: req.params.id,
-      user: req.user?._id,
+      user: req.User?._id,
     });
     if (isLiked) return next(new appError('you liked this blog before', 400));
 
     const like = await Like.create({
-      user: req.user?._id,
+      user: req.User?._id,
       blog: blog._id,
     });
     blog.likesCount++;
@@ -26,7 +26,7 @@ export const likeBlog = catchAsync(
       status: 'success',
       like,
     });
-    logger.info(`${req.user?._id} likes blog ${blog.title}`);
+    logger.info(`${req.User?._id} likes blog ${blog.title}`);
   },
 );
 
@@ -37,7 +37,7 @@ export const unlikeBlog = catchAsync(
 
     const isLiked = await Like.findOne({
       blog: req.params.id,
-      user: req.user?._id,
+      user: req.User?._id,
     });
     if (!isLiked)
       return next(
@@ -48,13 +48,13 @@ export const unlikeBlog = catchAsync(
       );
     await Like.deleteOne({
       blog: req.params.id,
-      user: req.user?._id,
+      user: req.User?._id,
     });
     blog.likesCount--;
     await blog.save();
     res.status(204).json({
       status: 'success',
     });
-    logger.info(`${req.user?._id} unlikes ${blog.title} blog`);
+    logger.info(`${req.User?._id} unlikes ${blog.title} blog`);
   },
 );

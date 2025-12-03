@@ -16,7 +16,7 @@ type blogData = Pick<IBlog, 'title' | 'content' | 'banner' | 'status'>;
 export const createBlog = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { title, content, banner, status } = req.body as blogData;
-    const author = req.user?._id;
+    const author = req.User?._id;
     const cleanContent = purify.sanitize(content);
 
     const blog = await Blog.create({
@@ -44,7 +44,7 @@ export const GetAllBlogs = catchAsync(
     const offset = parseInt(req.query.offset as string);
     const query: QueryType = {};
 
-    const user = await User.findById(req.user?._id).select('role');
+    const user = await User.findById(req.User?._id).select('role');
     if (!user || user.role === 'user') {
       query.status = 'published';
     }
@@ -74,7 +74,7 @@ export const GetUserBlogs = catchAsync(
     const query: QueryType = {};
 
     const wantedUser = req.params.id;
-    const user = await User.findById(req.user?._id).select('role');
+    const user = await User.findById(req.User?._id).select('role');
     if (!user || user.role === 'user') {
       query.status = 'published';
     }
@@ -98,7 +98,7 @@ export const GetUserBlogs = catchAsync(
 
 export const GetBlogBySlug = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const user = await User.findById(req.user?._id).select('role');
+    const user = await User.findById(req.User?._id).select('role');
     const blog = await Blog.findOne({ slug: req.params.slug })
       .select('-banner.publicId -__v')
       .populate('author', 'firstName lastName username email')
@@ -126,7 +126,7 @@ export const updateBlog = catchAsync(
     let blog = await Blog.findById(req.params.id);
     if (!blog) return next(new appError('blog is not found', 404));
 
-    const userID = req.user?._id;
+    const userID = req.User?._id;
     if (!blog.author.equals(userID)) {
       logger.warn('user tried to update blog without permission', {
         userID,
@@ -158,7 +158,7 @@ export const deleteBlog = catchAsync(
     const blog = await Blog.findById(req.params.id);
     if (!blog) return next(new appError('blog is not found', 404));
 
-    const userID = req.user?._id;
+    const userID = req.User?._id;
     console.log(userID, blog.author);
     if (!blog.author.equals(userID)) {
       logger.warn('user tried to delete blog without permission', {

@@ -14,6 +14,7 @@ import blogRouter from '@/routes/blogRouter';
 import likeRouter from '@/routes/likeRouter';
 import commentRouter from '@/routes/commentRouter';
 import globalErrorHandler from './lib/globalErrorHandler';
+import passport from 'passport';
 const app = express();
 
 mongoose
@@ -55,12 +56,12 @@ const limiter = rateLimit({
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(passport.initialize());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(compression({ threshold: 1024 }));
 app.use(helmet());
 app.use(limiter);
-
 (async () => {
   try {
     app.get('/api/v1', (req, res) => {

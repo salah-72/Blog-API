@@ -22,7 +22,7 @@ export const createComment = catchAsync(
     content = purify.sanitize(content);
 
     const comment = await Comment.create({
-      user: req.user?._id,
+      user: req.User?._id,
       blog: blog._id,
       content,
     });
@@ -33,7 +33,7 @@ export const createComment = catchAsync(
       comment,
     });
     logger.info(
-      `${req.user?._id} make comment (${content}) at blog ${blog.title}`,
+      `${req.User?._id} make comment (${content}) at blog ${blog.title}`,
     );
   },
 );
@@ -47,7 +47,7 @@ export const deleteComment = catchAsync(
     const blog = await Blog.findById(blogId);
     if (!blog) return next(new appError('blog not found', 404));
 
-    if (req.user?._id !== comment.user && req.user?.role !== 'admin') {
+    if (req.User?._id !== comment.user && req.User?.role !== 'admin') {
       logger.warn('regular user tried to delete comment');
       return next(
         new appError('you have no permission to delete this comment', 404),
@@ -60,7 +60,7 @@ export const deleteComment = catchAsync(
     res.status(204).json({
       status: 'success',
     });
-    logger.info(`${req.user?._id} delete his comment at ${blog.title} blog`);
+    logger.info(`${req.User?._id} delete his comment at ${blog.title} blog`);
   },
 );
 
